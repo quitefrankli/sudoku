@@ -1,32 +1,42 @@
-# Example file showing a basic pygame "game loop"
 import pygame
-import numpy as np
 import click
 
 from typing import *
-from pygame import Color, Rect
-from datetime import datetime
 
 from sudoku.config import *
 from sudoku.board import Board
 
 
+def find_solvable_board() -> Board:
+    for i in range(50):
+        print(f"searching for easy board attempt {i}")
+        board = Board()
+        algo = board.algo1()
+        try:
+            for _ in range(MAX_STEPS_SOLVABLE):
+                if next(algo):
+                    board.reset()
+                    return board
+        except StopIteration:
+            print("here")
+            pass
+
+    raise RuntimeError("No suitable board found")
+
 @click.command()
 @click.option("--difficulty", default=3)
 def main(difficulty: int) -> None:
-    # pygame setup
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
-    board = Board(screen)
-    running = True
-    
+
+    board = find_solvable_board()
     backtracking_algo = board.algo1()
+
+    running = True
     stop_algo = False
 
     while running:
-        # poll for events
-        # pygame.QUIT event means the user clicked X to close your window
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -35,23 +45,17 @@ def main(difficulty: int) -> None:
         if pressed[pygame.K_ESCAPE]:
             running = False
             
-        # fill the screen with a color to wipe away anything from last frame
-        screen.fill("purple")
-
-        board.draw()
+        board.draw(screen)
         if not stop_algo:
-            try:
-                for i in range(ALGO_ITER_PER_FRAME):
-                    stop_algo = next(backtracking_algo)
-                    if stop_algo:
-                        break
-            except StopIteration:
-                pass
+            for _ in range(ALGO_ITER_PER_FRAME):
+                stop_algo = next(backtracking_algo)
+                if stop_algo:
+                    break
 
         # flip() the display to put your work on screen
         pygame.display.flip()
 
-        clock.tick(FPS)  # limits FPS to 60
+        clock.tick(FPS)
 
     pygame.quit()
 

@@ -7,8 +7,7 @@ import pygame
 
 
 class Board:
-    def __init__(self, screen: Any, fill_count: int = FILL_COUNT):
-        self.screen = screen
+    def __init__(self, fill_count: int = FILL_COUNT):
         self.cells: List[List[int]] = [[0] * N for _ in range(N)]
         # for fast validation
         self.rows = [[False] * N for _ in range(N)]
@@ -49,6 +48,20 @@ class Board:
         self.boxs[Board._coord2box(r, c)][v] = False
         self.cells[r][c] = 0
     
+    def reset(self) -> None:
+        self.rows = [[False] * N for _ in range(N)]
+        self.cols = [[False] * N for _ in range(N)]
+        self.boxs = [[False] * N for _ in range(N)]
+
+        for r, row in enumerate(self.cells):
+            for c in range(N):
+                if (r, c) in self.init_coords:
+                    continue
+                row[c] = 0
+
+    def is_solved(self) -> bool:
+        return all([c != 0 for r in self.cells for c in r])
+
     def algo1(self, r: int = 0, c: int = 0):
         if r == N:
             yield True
@@ -69,7 +82,7 @@ class Board:
                 yield False
         
         
-    def draw(self) -> None:
+    def draw(self, screen) -> None:
         def draw_cell(cell: int, row: int, col: int) -> None:
             cell = str(cell)
             font_color = Color(0, 0, 255) if (row, col) in self.init_coords else Color(0, 0, 0)
@@ -84,10 +97,10 @@ class Board:
             
             bg_rect = Rect((CW*row, CH*col), (CW-PADDING, CH-PADDING))
             bg_rect.center = rect.center
-            pygame.draw.rect(self.screen, Color(255, 255, 255), bg_rect)
+            pygame.draw.rect(screen, Color(255, 255, 255), bg_rect)
             
             if cell != "0":
-                self.screen.blit(surface, rect)
+                screen.blit(surface, rect)
 
         for r, row in enumerate(self.cells):
             for c, cell in enumerate(row):
