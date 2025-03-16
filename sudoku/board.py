@@ -54,10 +54,13 @@ class Board:
         self.boxs = [[False] * N for _ in range(N)]
 
         for r, row in enumerate(self.cells):
-            for c in range(N):
+            for c, num in enumerate(row):
                 if (r, c) in self.init_coords:
-                    continue
-                row[c] = 0
+                   self.rows[r][num-1] = True
+                   self.cols[c][num-1] = True
+                   self.boxs[r//3*3+c//3][num-1] = True
+                else:
+                    row[c] = 0
 
     def is_solved(self) -> bool:
         return all([c != 0 for r in self.cells for c in r])
